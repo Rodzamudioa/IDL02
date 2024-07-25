@@ -1,0 +1,63 @@
+from flask import Flask, request, redirect, url_for, flash
+
+app = Flask(__name__)
+app.secret_key = 'supersecretkey'  # Necesario para mostrar mensajes flash
+
+# Lista de categorías permitidas
+CATEGORIAS_PERMITIDAS = ['Chocolates', 'Caramelos', 'Mashmelos', 'Galletas', 'Salados', 'Gomas de mascar']
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        nombre_producto = request.form.get('nombre_producto')
+        precio_producto = request.form.get('precio_producto')
+        categorias_producto = request.form.getlist('categorias_producto')
+        en_venta = request.form.get('en_venta')
+
+        # Validaciones
+        if len(nombre_producto) > 20:
+            flash("El nombre del producto no debe tener más de 20 caracteres.", 'error')
+            return redirect(url_for('index'))
+
+        try:
+            precio = float(precio_producto)
+            if precio <= 0 or precio >= 999:
+                flash("El precio del producto debe ser mayor a 0 y menor a 999 soles.", 'error')
+                return redirect(url_for('index'))
+        except ValueError:
+            flash("Por favor verifique el campo del precio.", 'error')
+            return redirect(url_for('index'))
+
+        if not all(categoria in CATEGORIAS_PERMITIDAS for categoria in categorias_producto):
+            flash("Una o más categorías seleccionadas no son válidas.", 'error')
+            return redirect(url_for('index'))
+
+        if en_venta not in ['Si', 'No']:
+            flash("Debe definir si el producto está en venta o no.", 'error')
+            return redirect(url_for('index'))
+
+        flash("Felicidades su producto se agregó.", 'success')
+        return redirect(url_for('index'))
+
+    # Retorno de formulario como texto (en lugar de usar HTML)
+    return '''
+        <form method="post">
+            Nombre del producto: <input type="text" name="nombre_producto"><br>
+            Precio del producto: <input type="text" name="precio_producto"><br>
+            Categorías del producto:<br>
+            <input type="checkbox" name="categorias_producto" value="Chocolates"> Chocolates<br>
+            <input type="checkbox" name="categorias_producto" value="Caramelos"> Caramelos<br>
+            <input type="checkbox" name="categorias_producto" value="Mashmelos"> Mashmelos<br>
+            <input type="checkbox" name="categorias_producto" value="Galletas"> Galletas<br>
+            <input type="checkbox" name="categorias_producto" value="Salados"> Salados<br>
+            <input type="checkbox" name="categorias_producto" value="Gomas de mascar"> Gomas de mascar<br>
+            ¿Está en venta?<br>
+            <input type="radio" name="en_venta" value="Si"> Sí<br>
+            <input type="radio" name="en_venta" value="No"> No<br>
+            <input type="submit" value="Enviar">
+        </form>
+    '''
+
+if __name__ == '__main__':
+    app.run(debug=True)
