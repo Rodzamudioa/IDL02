@@ -1,7 +1,7 @@
-from flask import Flask, request, redirect, url_for, flash
+from flask import Flask, request, redirect, url_for, flash, render_template_string
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # Necesario para mostrar mensajes flash
+app.secret_key = 'supersecretkey'  # Necesario para usar flash messages
 
 # Lista de categorías permitidas
 CATEGORIAS_PERMITIDAS = ['Chocolates', 'Caramelos', 'Mashmelos', 'Galletas', 'Salados', 'Gomas de mascar']
@@ -37,27 +37,59 @@ def index():
             flash("Debe definir si el producto está en venta o no.", 'error')
             return redirect(url_for('index'))
 
+        # Si todas las validaciones son correctas
         flash("Felicidades su producto se agregó.", 'success')
         return redirect(url_for('index'))
 
-    # Retorno de formulario como texto (en lugar de usar HTML)
-    return '''
-        <form method="post">
-            Nombre del producto: <input type="text" name="nombre_producto"><br>
-            Precio del producto: <input type="text" name="precio_producto"><br>
-            Categorías del producto:<br>
-            <input type="checkbox" name="categorias_producto" value="Chocolates"> Chocolates<br>
-            <input type="checkbox" name="categorias_producto" value="Caramelos"> Caramelos<br>
-            <input type="checkbox" name="categorias_producto" value="Mashmelos"> Mashmelos<br>
-            <input type="checkbox" name="categorias_producto" value="Galletas"> Galletas<br>
-            <input type="checkbox" name="categorias_producto" value="Salados"> Salados<br>
-            <input type="checkbox" name="categorias_producto" value="Gomas de mascar"> Gomas de mascar<br>
-            ¿Está en venta?<br>
-            <input type="radio" name="en_venta" value="Si"> Sí<br>
-            <input type="radio" name="en_venta" value="No"> No<br>
-            <input type="submit" value="Enviar">
-        </form>
-    '''
+    # Formulario en formato HTML
+    return render_template_string('''
+        <!doctype html>
+        <html lang="es">
+        <head>
+            <meta charset="utf-8">
+            <title>Formulario de Productos</title>
+            <style>
+                .flash-message {
+                    padding: 10px;
+                    margin: 10px 0;
+                    border-radius: 5px;
+                    color: #fff;
+                }
+                .flash-message.success {
+                    background-color: #28a745;
+                }
+                .flash-message.error {
+                    background-color: #dc3545;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Ingreso de Productos</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="post">
+                Nombre del producto: <input type="text" name="nombre_producto" required><br>
+                Precio del producto: <input type="text" name="precio_producto" required><br>
+                Categorías del producto:<br>
+                <input type="checkbox" name="categorias_producto" value="Chocolates"> Chocolates<br>
+                <input type="checkbox" name="categorias_producto" value="Caramelos"> Caramelos<br>
+                <input type="checkbox" name="categorias_producto" value="Mashmelos"> Mashmelos<br>
+                <input type="checkbox" name="categorias_producto" value="Galletas"> Galletas<br>
+                <input type="checkbox" name="categorias_producto" value="Salados"> Salados<br>
+                <input type="checkbox" name="categorias_producto" value="Gomas de mascar"> Gomas de mascar<br>
+                ¿Está en venta?<br>
+                <input type="radio" name="en_venta" value="Si"> Sí<br>
+                <input type="radio" name="en_venta" value="No"> No<br>
+                <input type="submit" value="Enviar">
+            </form>
+        </body>
+        </html>
+    ''')
 
 if __name__ == '__main__':
     app.run(debug=True)
